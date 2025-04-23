@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import Components from '../components'
+import { saveToken, getToken, removeToken } from '../utils/auth'
 
 const Auth = () => {
 	const API_URL = import.meta.env.VITE_API_URL
@@ -16,11 +17,19 @@ const Auth = () => {
 	const [isFormValid, setIsFormValid] = useState(false)
 	const [passwordError, setPasswordError] = useState(false)
 
-	const [roles, setRoles] = useState([
+	const [roles] = useState([
 		{ id: 1, value: 'sportsman', label: 'Спортсмен' },
 		{ id: 2, value: 'sponsor', label: 'Организатор' },
 		{ id: 3, value: 'region', label: 'Регион' },
 	])
+
+	useEffect(() => {
+		const token = getToken()
+		if (token) {
+			console.log('🔐 Уже авторизован')
+			// сюда можешь вставить navigate('/dashboard') если используешь роутинг
+		}
+	}, [])
 
 	useEffect(() => {
 		if (!isRegister) {
@@ -86,6 +95,7 @@ const Auth = () => {
 				})
 
 				console.log('🔐 Успешный вход. Токен:', response.data.access_token)
+				saveToken(response.data.access_token)
 				alert('Вход выполнен успешно')
 			} catch (error) {
 				console.error(
@@ -97,6 +107,11 @@ const Auth = () => {
 				}
 			}
 		}
+	}
+
+	const handleLogout = () => {
+		removeToken()
+		window.location.reload()
 	}
 
 	return (
@@ -183,6 +198,12 @@ const Auth = () => {
 							{isRegister
 								? 'У меня уже есть аккаунт, войти?'
 								: 'У меня еще нет аккаунта, создать?'}
+						</button>
+						<button
+							onClick={handleLogout}
+							className='text-red-400 hover:underline text-xs mt-2'
+						>
+							Выйти из аккаунта
 						</button>
 					</div>
 				</div>
