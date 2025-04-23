@@ -1,1 +1,12 @@
 @import 'tailwindcss';
+
+body {
+	background-color: #1c1c25;
+	font-family: 'JetBrains Mono', monospace;
+	font-style: normal;
+}
+button:hover .hover-circle {
+	transform: scale(4);
+	opacity: 0.6;
+	transition: transform 0.3s ease, opacity 0.3s ease;
+}
