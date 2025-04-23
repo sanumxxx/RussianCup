@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import Components from '../components'
 import { saveToken, getToken, removeToken } from '../utils/auth'
+import { useNavigate } from 'react-router-dom'
 
 const Auth = () => {
+	const navigate = useNavigate()
+
 	const API_URL = import.meta.env.VITE_API_URL
 
 	const { CustomButton, InputText } = Components
@@ -74,7 +77,7 @@ const Auth = () => {
 				})
 
 				console.log('✅ Успешная регистрация', response.data)
-				alert('Вы успешно зарегистрированы!')
+				navigate('/profile') // ← сюда летим после регистрации
 			} catch (error) {
 				console.error(
 					'❌ Ошибка регистрации:',
@@ -96,7 +99,7 @@ const Auth = () => {
 
 				console.log('🔐 Успешный вход. Токен:', response.data.access_token)
 				saveToken(response.data.access_token)
-				alert('Вход выполнен успешно')
+				navigate('/profile') // ← сюда летим после логина
 			} catch (error) {
 				console.error(
 					'❌ Ошибка авторизации:',
@@ -109,17 +112,29 @@ const Auth = () => {
 		}
 	}
 
-	const handleLogout = () => {
-		removeToken()
-		window.location.reload()
-	}
-
 	return (
-		<div className='h-screen flex items-center'>
-			<div className='bg-[#22222E] rounded-2xl flex justify-between items-center p-4 shadow-2xl w-2/3 mx-auto gap-3'>
+		<div className='h-screen flex flex-col justify-center items-center'>
+			<div className='flex justify-between items-center bg-[#FC3000] w-2/3 text-white px-1 font-thin'>
+				<p>
+					russian_cup_
+					{isRegister ? 'register' : 'login'}
+					_2025
+				</p>
+				<img src='assets/icons/plus.svg' alt='' className='rotate-45 h-5' />
+			</div>
+
+			<div className='bg-[#22222E] border-1 border-[#FC3000] flex justify-between items-center p-4 shadow-2xl w-2/3 mx-auto gap-3'>
 				<div className='w-full xl:w-1/2 flex flex-col items-center justify-center'>
 					<h1 className='mb-5 text-4xl font-bold text-[#FC3000]'>
-						{isRegister ? 'Регистрация' : 'Авторизация'}
+						<img
+							src={
+								isRegister
+									? '/assets/регистрация.svg'
+									: '/assets/авторизация.svg'
+							}
+							alt=''
+							className='h-12 '
+						/>
 					</h1>
 					<div className='flex flex-col gap-3 w-4/5'>
 						{isRegister && (
@@ -169,7 +184,7 @@ const Auth = () => {
 												<button
 													key={role.id}
 													type='button'
-													className={`font-bold text-md h-10 w-full mb-2 rounded-lg transition-all ${
+													className={`pixelify font-normal text-md h-10 w-full mb-2 rounded-lg transition-all ${
 														isSelected ? baseColor : grayColor
 													}`}
 													onClick={() => handleChange('role_id', role.id)}
@@ -198,12 +213,6 @@ const Auth = () => {
 							{isRegister
 								? 'У меня уже есть аккаунт, войти?'
 								: 'У меня еще нет аккаунта, создать?'}
-						</button>
-						<button
-							onClick={handleLogout}
-							className='text-red-400 hover:underline text-xs mt-2'
-						>
-							Выйти из аккаунта
 						</button>
 					</div>
 				</div>

@@ -1,7 +1,7 @@
 @import 'tailwindcss';
 
 body {
-	background-color: #1c1c25;
+	background-color: #22222e;
 	font-family: 'JetBrains Mono', monospace;
 	font-style: normal;
 }
@@ -9,4 +9,7 @@ button:hover .hover-circle {
 	transform: scale(4);
 	opacity: 0.6;
 	transition: transform 0.3s ease, opacity 0.3s ease;
+}
+.pixelify {
+	font-family: 'Pixelify Sans', sans-serif;
 }
