@@ -85,11 +85,24 @@ class EventResponse(EventBase):
 
 
 class EventDetailResponse(EventResponse):
-    organizer: Dict[str, Any]
-    participants: Optional[List[Dict[str, Any]]] = None
+    organizer: Optional[Dict[str, Any]] = None
 
     class Config:
         orm_mode = True
+
+        @staticmethod
+        def schema_extra(schema: Dict[str, Any], model) -> None:
+            if "properties" in schema:
+                schema["properties"]["organizer"] = {
+                    "title": "Organizer",
+                    "type": "object",
+                    "properties": {
+                        "id": {"type": "string"},
+                        "full_name": {"type": "string"},
+                        "email": {"type": "string"},
+                        "organization_name": {"type": "string"}
+                    }
+                }
 
 
 # Схема для регистрации на мероприятие

@@ -1,12 +1,13 @@
 import React from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getImageUrl } from '../utils/imageUtils'
 
-const EventCard = ({ 
-    id, 
-    name, 
-    description, 
-    date, 
-    status = 'active', 
+const EventCard = ({
+    id,
+    name,
+    description,
+    date,
+    status = 'active',
     difficulty = 'medium',
     location,
     isOnline = false,
@@ -14,27 +15,27 @@ const EventCard = ({
     maxParticipants = 100,
     tags = [],
     imageUrl = 'https://placehold.co/600x400.png',
-    isPurple = false 
+    isPurple = false
 }) => {
     const navigate = useNavigate()
-    
+
     // Форматирование даты из ISO формата в читаемый вид
     const formatDate = (dateString) => {
         try {
             const date = new Date(dateString)
-            return date.toLocaleDateString('ru-RU', { 
-                day: '2-digit', 
-                month: '2-digit', 
-                year: 'numeric' 
+            return date.toLocaleDateString('ru-RU', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
             })
         } catch (e) {
             return dateString // Возвращаем как есть, если неверный формат
         }
     }
-    
+
     // Вычисление процента заполнения
     const fillPercentage = Math.min(100, Math.round((participants / maxParticipants) * 100))
-    
+
     // Получение статуса как текст
     const getStatusText = (status) => {
         switch(status) {
@@ -45,7 +46,7 @@ const EventCard = ({
             default: return status
         }
     }
-    
+
     // Получение цвета в зависимости от сложности
     const getDifficultyColor = (difficulty) => {
         switch(difficulty) {
@@ -56,7 +57,7 @@ const EventCard = ({
             default: return 'text-white'
         }
     }
-    
+
     // Получение текста сложности
     const getDifficultyText = (difficulty) => {
         switch(difficulty) {
@@ -67,11 +68,19 @@ const EventCard = ({
             default: return difficulty
         }
     }
-    
+
     // Обработчик клика по карточке
-    const handleClick = () => {
-        navigate(`/event/${id}`)
+const handleClick = () => {
+        // Ensure we have a valid ID before navigating
+        if (id) {
+            navigate(`/event/${id}`)
+        } else {
+            console.error('Event ID is missing, cannot navigate')
+        }
     }
+
+    // Get the full image URL
+    const fullImageUrl = getImageUrl(imageUrl)
 
     return (
         <div
@@ -102,13 +111,13 @@ const EventCard = ({
                     />
                 </svg>
             </div>
-            
+
             <div className='flex flex-col justify-between p-4 h-full'>
                 <div>
                     <div className="relative mb-3">
-                        <img 
-                            className="w-full h-40 object-cover rounded" 
-                            src={imageUrl} 
+                        <img
+                            className="w-full h-40 object-cover rounded"
+                            src={fullImageUrl}
                             alt={name} 
                         />
                         <div className={`absolute top-2 right-2 px-2 py-1 rounded text-xs ${

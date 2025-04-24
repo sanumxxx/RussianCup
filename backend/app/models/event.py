@@ -4,6 +4,18 @@ from sqlalchemy.sql import func
 import enum
 from app.database import Base
 
+# In your Event model
+@property
+def organizer_dict(self):
+    if not self.organizer:
+        return None
+    return {
+        "id": self.organizer.id,
+        "full_name": self.organizer.full_name,
+        "email": self.organizer.email,
+        "organization_name": getattr(self.organizer, 'organization_name', None)
+    }
+
 # Таблица связи для участников мероприятия
 event_participants = Table(
     "event_participants",

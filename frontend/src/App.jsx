@@ -58,6 +58,14 @@ const App = () => {
 							}
 						/>
 						<Route
+							path="/event/:id"
+							element={
+								<ProtectedRoute>
+									<Event />
+								</ProtectedRoute>
+							}
+						/>
+						<Route
 							path="/rating"
 							element={
 								<ProtectedRoute>

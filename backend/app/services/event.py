@@ -81,8 +81,12 @@ def get_event(db: Session, event_id: str) -> Event:
             status_code=404,
             detail="Мероприятие не найдено"
         )
-    return event
 
+    # Ensure the organizer relationship is loaded
+    if event.organizer is None:
+        db.refresh(event)
+
+    return event
 
 def update_event(db: Session, event_id: str, event_data: EventUpdate, user_id: str) -> Event:
     """Обновить мероприятие"""
