@@ -77,7 +77,7 @@ const Auth = () => {
 				})
 
 				console.log('✅ Успешная регистрация', response.data)
-				navigate('/profile') // ← сюда летим после регистрации
+				navigate('/events') // ← сюда летим после регистрации
 			} catch (error) {
 				console.error(
 					'❌ Ошибка регистрации:',
@@ -99,7 +99,7 @@ const Auth = () => {
 
 				console.log('🔐 Успешный вход. Токен:', response.data.access_token)
 				saveToken(response.data.access_token)
-				navigate('/profile') // ← сюда летим после логина
+				navigate('/events') // ← сюда летим после логина
 			} catch (error) {
 				console.error(
 					'❌ Ошибка авторизации:',

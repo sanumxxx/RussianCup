@@ -1,35 +1,28 @@
 import { Button } from '@material-tailwind/react'
 import React, { useState } from 'react'
-import EventCard from '../components/EventCard'
+import RatingCard from '../components/RatingCard'
 import Header from '../components/Header'
 import { motion } from 'framer-motion'
 import ModalWindow from '../components/ModalWindow'
 import { useNavigate } from 'react-router-dom'
 
-const Events = () => {
+const Rating = () => {
 	const [isOpen, setIsOpen] = useState(false)
-	const events = [
-		{ name: 'Мега турнир', isPurple: false, colSpan: 2, rowSpan: 2 },
-		{ name: 'Обычный ивент 1' },
-		{ name: 'Обычный ивент 2' },
-		{ name: 'Обычный ивент 3' },
-		{ name: 'Обычный ивент 3' },
-		{ name: 'Обычный ивент 3' },
+
+	const RatingList = [
+		{ name: 'Иван Иванов', score: 120 },
+		{ name: 'Андрей Смирнов', score: 230 },
+		{ name: 'Мария Козлова', score: 180 },
+		{ name: 'Ольга Петрова', score: 90 },
+		{ name: 'Егор Сидоров', score: 300 },
 	]
 
-	const role = 2
-
-	const handleClick = () => {
-		setIsOpen(true)
-	}
-
-	const closeModal = () => {
-		setIsOpen(false)
-	}
+	// Сортируем по убыванию очков
+	const sortedList = [...RatingList].sort((a, b) => b.score - a.score)
 
 	return (
 		<>
-			<Header />
+			<Header handleNav={handleNav} />
 
 			<div className='relative w-full'>
 				{/* Нижняя карточка */}
@@ -69,51 +62,30 @@ const Events = () => {
 							/>
 						</div>
 						<div className='flex justify-between items-center h-90 p-4 border border-[#FC3000] bg-[#22222E]'>
-							{role === 1 ? (
-								<p>Спортсмен</p>
-							) : role === 2 ? (
-								<div className='w-full flex justify-center'>
-									<button
-										onClick={handleClick}
-										className='rounded-lg h-10 px-3 transition-all overflow-hidden bg-[#FC3000] text-white hover:scale-[100.5%] active:scale-[99.5%]'
-									>
-										Организовать мероприятие
-									</button>
-								</div>
-							) : role === 3 ? (
-								<p>Регион</p>
-							) : (
-								<p>ничего</p>
-							)}
+							<div className='w-full flex justify-center'></div>
 						</div>
 					</div>
 				</div>
 			</div>
 
-			{/* Карточки мероприятий */}
 			<div className='grid grid-cols-3 auto-rows-auto gap-4 w-4/5 mx-auto mt-60'>
-				{events.map((event, index) => (
+				{sortedList.map((user, index) => (
 					<motion.div
 						key={index}
 						initial={{ opacity: 0, y: 50 }}
 						animate={{ opacity: 1, y: 0 }}
 						transition={{ duration: 0.4, delay: index * 0.1 }}
 					>
-						<EventCard
-							name={event.name}
-							isPurple={event?.isPurple ?? true}
-							description='описание'
+						<RatingCard
+							place={index + 1}
+							username={user.name}
+							score={user.score}
 						/>
 					</motion.div>
 				))}
 			</div>
-
-			{/* Модалка */}
-			<ModalWindow isOpen={isOpen} onClose={closeModal}>
-				<p className='text-white'>Тут будет форма добавления мероприятия!</p>
-			</ModalWindow>
 		</>
 	)
 }
 
-export default Events
+export default Rating

@@ -7,6 +7,8 @@ import {
 import Auth from './pages/Auth'
 import Events from './pages/Events'
 import Event from './pages/Event'
+import Profile from './pages/Profile'
+import { Rating } from '@material-tailwind/react'
 
 const App = () => {
 	return (
@@ -16,6 +18,8 @@ const App = () => {
 				<Route path='/auth' element={<Auth />} />
 				<Route path='/events' element={<Events />} />
 				<Route path='/event' element={<Event />} />
+				<Route path='/profile' element={<Profile />} />
+				<Route path='/rating' element={<Rating />} />
 			</Routes>
 		</Router>
 	)
