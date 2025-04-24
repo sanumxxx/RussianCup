@@ -6,10 +6,8 @@ import { useNavigate } from 'react-router-dom'
 
 const Auth = () => {
 	const navigate = useNavigate()
-
-	const API_URL = import.meta.env.VITE_API_URL || 'http://10.0.85.1:8000/api'
-
 	const { CustomButton, InputText } = Components
+
 	const [isRegister, setIsRegister] = useState(true)
 	const [formData, setFormData] = useState({
 		fullName: '',
@@ -20,6 +18,7 @@ const Auth = () => {
 	const [isFormValid, setIsFormValid] = useState(false)
 	const [passwordError, setPasswordError] = useState(false)
 	const [errorMessage, setErrorMessage] = useState('')
+	const [isLoading, setIsLoading] = useState(false)
 
 	const [roles] = useState([
 		{ id: 1, value: 'sportsman', label: 'Спортсмен' },
@@ -30,7 +29,7 @@ const Auth = () => {
 	useEffect(() => {
 		const token = getToken()
 		if (token) {
-			navigate('/events')
+			navigate('/profile')
 		}
 	}, [navigate])
 
@@ -53,7 +52,7 @@ const Auth = () => {
 
 	const validateFullName = name => {
 		const trimmedName = name.trim()
-		return trimmedName.split(' ').length === 3 && trimmedName.length > 0
+		return trimmedName.length > 5 && trimmedName.includes(' ')
 	}
 
 	const validateEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
@@ -77,9 +76,11 @@ const Auth = () => {
 		// Сбрасываем предыдущие ошибки
 		setPasswordError(false)
 		setErrorMessage('')
+		setIsLoading(true)
 
 		if (!isFormValid) {
 			setErrorMessage('Пожалуйста, заполните все поля корректно')
+			setIsLoading(false)
 			return
 		}
 
@@ -87,31 +88,29 @@ const Auth = () => {
 			if (isRegister) {
 				const selectedRole = roles.find(r => r.id === formData.role_id)?.value
 
-				const response = await axios.post(`${API_URL}/register`, {
+				// Registration request
+				const response = await axios.post('/register', {
 					full_name: formData.fullName,
 					email: formData.email,
 					password: formData.password,
 					role: selectedRole,
 				})
 
-				saveToken(response.data.access_token || '')
-				navigate('/events')
+				console.log('Registration successful:', response.data)
+
+				// Если в ответе есть токен доступа, сразу сохраняем его
+				if (response.data.access_token) {
+					saveToken(response.data.access_token)
+					navigate('/profile')
+				} else {
+					// Если токена нет, выполняем вход с полученными данными
+					await loginUser(formData.email, formData.password)
+				}
 			} else {
-				const form = new URLSearchParams()
-				form.append('username', formData.email)
-				form.append('password', formData.password)
-
-				const response = await axios.post(`${API_URL}/token`, form, {
-					headers: {
-						'Content-Type': 'application/x-www-form-urlencoded',
-					},
-				})
-
-				saveToken(response.data.access_token)
-				navigate('/events')
+				await loginUser(formData.email, formData.password)
 			}
 		} catch (error) {
-			console.error('Ошибка:', error.response?.data || error.message)
+			console.error('Error:', error.response?.data || error.message)
 
 			const errorText = error.response?.data?.detail ||
 				(isRegister ? 'Ошибка регистрации' : 'Ошибка входа')
@@ -121,6 +120,32 @@ const Auth = () => {
 			if (error.response?.status === 401) {
 				setPasswordError(true)
 			}
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
+	const loginUser = async (email, password) => {
+		try {
+			const form = new URLSearchParams()
+			form.append('username', email)
+			form.append('password', password)
+
+			const response = await axios.post('/token', form, {
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+				},
+			})
+
+			if (response.data && response.data.access_token) {
+				saveToken(response.data.access_token)
+				navigate('/profile')
+			} else {
+				throw new Error('Invalid token response')
+			}
+		} catch (error) {
+			console.error('Login error:', error)
+			throw error
 		}
 	}
 
@@ -178,11 +203,10 @@ const Auth = () => {
 								type='password'
 								value={formData.password}
 								onChange={e => handleChange('password', e.target.value)}
-								error={passwordError}
 							/>
 							{isRegister && (
 								<p className='text-xs text-center text-gray-400 mt-1'>
-									Пароль должен содержать цифры и заглавные буквы
+									Пароль должен содержать минимум 8 символов, цифры и заглавные буквы
 								</p>
 							)}
 						</div>
@@ -211,9 +235,9 @@ const Auth = () => {
 						)}
 
 						<CustomButton
-							placeholder={isRegister ? 'Зарегистрироваться' : 'Войти'}
+							placeholder={isLoading ? 'Загрузка...' : (isRegister ? 'Зарегистрироваться' : 'Войти')}
 							handleClick={handleSubmit}
-							disabled={!isFormValid}
+							disabled={isLoading || !isFormValid}
 						/>
 
 						<button
@@ -221,6 +245,12 @@ const Auth = () => {
 								setIsRegister(prev => !prev)
 								setPasswordError(false)
 								setErrorMessage('')
+								setFormData({
+									fullName: '',
+									email: '',
+									password: '',
+									role_id: null,
+								})
 							}}
 							className='w-full text-white hover:underline text-center'
 						>

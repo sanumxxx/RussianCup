@@ -171,7 +171,6 @@ def update_region_profile(db: Session, user_id: str, profile_data: RegionProfile
     return profile
 
 
-# Общие функции для профилей
 def get_user_profile(db: Session, user_id: str):
     """Получение профиля пользователя на основе его роли"""
     user = db.query(User).filter(User.id == user_id).first()
@@ -202,6 +201,14 @@ def get_user_profile(db: Session, user_id: str):
                 "website": profile.website,
                 "hosted_events_count": profile.hosted_events_count
             }
+
+            # Добавляем подсчет мероприятий, если используется модель Event
+            try:
+                from app.models.event import Event
+                events_count = db.query(Event).filter(Event.organizer_id == user_id).count()
+                profile_data["hosted_events_count"] = events_count
+            except Exception as e:
+                print(f"Не удалось получить количество мероприятий: {e}")
     elif user.role == UserRole.REGION:
         profile = db.query(RegionProfile).filter(RegionProfile.user_id == user_id).first()
         if profile:
@@ -231,11 +238,20 @@ def create_profile_after_registration(db: Session, user_id: str, role: UserRole)
         if role == UserRole.SPORTSMAN:
             create_sportsman_profile(db, SportsmanProfileCreate(user_id=user_id))
         elif role == UserRole.SPONSOR:
-            create_sponsor_profile(db, SponsorProfileCreate(user_id=user_id))
+            create_sponsor_profile(db, SponsorProfileCreate(
+                user_id=user_id,
+                organization_name="Моя организация",  # Добавляем базовое название
+                organization_description="Описание организации"  # Добавляем базовое описание
+            ))
         elif role == UserRole.REGION:
-            # Для региона требуется указать название региона, поэтому
-            # нужно будет создать профиль позже с правильными данными
-            pass
+            # Для региона создаем базовый профиль (предварительно)
+            try:
+                create_region_profile(db, RegionProfileCreate(
+                    user_id=user_id,
+                    region_name="Мой регион"  # Добавляем базовое название региона
+                ))
+            except Exception as e:
+                print(f"Не удалось создать профиль региона: {e}")
     except HTTPException as e:
         # Не выбрасываем исключение, чтобы не прерывать регистрацию,
         # если профиль не удалось создать

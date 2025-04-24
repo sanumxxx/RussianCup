@@ -12,14 +12,24 @@ from app.models.user import User
 
 router = APIRouter(prefix="/api")
 
+
 @router.post("/register", response_model=dict)
 async def register_user(user_data: UserRegistration, db: Session = Depends(get_db)):
     user = register_new_user(db, user_data)
+
+    # После успешной регистрации сразу создаем токен для пользователя
+    access_token = create_access_token(
+        data={"sub": user.id, "role": user.role.value},
+        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    )
+
     return {
         "success": True,
         "message": "Пользователь успешно зарегистрирован",
         "user_id": user.id,
-        "role": user.role.value
+        "role": user.role.value,
+        "access_token": access_token,
+        "token_type": "bearer"
     }
 
 @router.post("/token", response_model=Token)

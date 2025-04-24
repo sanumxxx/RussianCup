@@ -1,14 +1,15 @@
 from sqlalchemy import Column, String, Boolean, DateTime, Enum
+from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import enum
 from app.database import Base
-
 
 
 class UserRole(str, enum.Enum):
     SPORTSMAN = "sportsman"
     REGION = "region"
     SPONSOR = "sponsor"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -21,6 +22,10 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+    # Связи с мероприятиями
+    organized_events = relationship("Event", back_populates="organizer")
+    participated_events = relationship("Event", secondary="event_participants", back_populates="participants")
 
     def __repr__(self):
         return f"<User {self.email}>"

@@ -3,7 +3,7 @@ import { useProfile } from '../../context/ProfileContext'
 import Components from '../../components'
 
 const SportsmanProfile = () => {
-    const { profile, updateProfile } = useProfile()
+    const { profile, updateProfile, isLoading } = useProfile()
     const { CustomButton, InputText } = Components
 
     const [isEditing, setIsEditing] = useState(false)
@@ -12,31 +12,66 @@ const SportsmanProfile = () => {
         specialization: profile?.profile_data?.specialization || '',
         experience_years: profile?.profile_data?.experience_years || 0
     })
+    const [updateError, setUpdateError] = useState('')
+    const [updateSuccess, setUpdateSuccess] = useState(false)
 
     const handleChange = (field, value) => {
         setFormData(prev => ({
             ...prev,
             [field]: field === 'experience_years' ? parseInt(value) || 0 : value
         }))
+        setUpdateError('')
+        setUpdateSuccess(false)
     }
 
     const handleSubmit = async () => {
         try {
+            setUpdateError('')
             await updateProfile('sportsman', formData)
+            setUpdateSuccess(true)
+            setTimeout(() => setUpdateSuccess(false), 3000)
             setIsEditing(false)
         } catch (error) {
             console.error('Failed to update profile:', error)
+            setUpdateError('Не удалось обновить профиль. Пожалуйста, попробуйте снова.')
         }
     }
 
+    // Reset form data when profile changes
+    React.useEffect(() => {
+        if (profile && profile.profile_data) {
+            setFormData({
+                bio: profile.profile_data.bio || '',
+                specialization: profile.profile_data.specialization || '',
+                experience_years: profile.profile_data.experience_years || 0
+            })
+        }
+    }, [profile])
+
     if (!profile || !profile.profile_data) {
-        return <div className="text-white text-center">Информация профиля недоступна</div>
+        return (
+            <div className="text-white text-center p-6 bg-[#33333E] rounded-lg">
+                <p>Информация профиля загружается или недоступна</p>
+            </div>
+        )
     }
 
     const { rating, completed_events, wins } = profile.profile_data
 
     return (
         <div className="text-white">
+            {updateSuccess && (
+                <div className="mb-4 p-3 bg-green-600 text-white rounded">
+                    Профиль успешно обновлен!
+                </div>
+            )}
+
+            {updateError && (
+                <div className="mb-4 p-3 bg-red-600 text-white rounded">
+                    {updateError}
+                </div>
+            )}
+
             <div className="grid grid-cols-3 gap-4 mb-6">
                 <div className="p-4 bg-[#333] rounded-lg text-center">
                     <p className="text-sm text-[#B0B5C1]">Рейтинг</p>
@@ -56,15 +91,21 @@ const SportsmanProfile = () => {
                 <div className="mb-6">
                     <div className="mb-4">
                         <h3 className="text-lg font-semibold mb-2">О себе</h3>
-                        <p className="text-[#B0B5C1]">{formData.bio || 'Нет информации'}</p>
+                        <p className="text-[#B0B5C1] p-3 bg-[#33333E] rounded-lg min-h-[100px]">
+                            {formData.bio || 'Нет информации'}
+                        </p>
                     </div>
                     <div className="mb-4">
                         <h3 className="text-lg font-semibold mb-2">Специализация</h3>
-                        <p className="text-[#B0B5C1]">{formData.specialization || 'Не указана'}</p>
+                        <p className="text-[#B0B5C1] p-3 bg-[#33333E] rounded-lg">
+                            {formData.specialization || 'Не указана'}
+                        </p>
                     </div>
                     <div className="mb-4">
                         <h3 className="text-lg font-semibold mb-2">Опыт (лет)</h3>
-                        <p className="text-[#B0B5C1]">{formData.experience_years || 0}</p>
+                        <p className="text-[#B0B5C1] p-3 bg-[#33333E] rounded-lg">
+                            {formData.experience_years || 0}
+                        </p>
                     </div>
                     <CustomButton
                         placeholder="Редактировать профиль"
@@ -78,7 +119,7 @@ const SportsmanProfile = () => {
                         <textarea
                             value={formData.bio || ''}
                             onChange={(e) => handleChange('bio', e.target.value)}
-                            className="w-full px-2 py-2 rounded-lg bg-[#444A58] text-[#B0B5C1] border-1 border-[#555C69] placeholder-[#B0B5C1]"
+                            className="w-full px-3 py-2 rounded-lg bg-[#444A58] text-[#B0B5C1] border border-[#555C69] placeholder-[#B0B5C1]"
                             rows="4"
                             placeholder="Расскажите о себе"
                         />
@@ -103,12 +144,24 @@ const SportsmanProfile = () => {
                     </div>
                     <div className="flex space-x-4">
                         <CustomButton
-                            placeholder="Сохранить"
+                            placeholder={isLoading ? "Сохранение..." : "Сохранить"}
                             handleClick={handleSubmit}
+                            disabled={isLoading}
                         />
                         <button
-                            onClick={() => setIsEditing(false)}
-                            className="px-3 py-2 rounded-lg bg-[#444A58] text-[#B0B5C1]"
+                            onClick={() => {
+                                setIsEditing(false)
+                                setUpdateError('')
+                                // Reset form data to current profile
+                                if (profile && profile.profile_data) {
+                                    setFormData({
+                                        bio: profile.profile_data.bio || '',
+                                        specialization: profile.profile_data.specialization || '',
+                                        experience_years: profile.profile_data.experience_years || 0
+                                    })
+                                }
+                            }}
+                            className="px-3 py-2 rounded-lg bg-[#444A58] text-[#B0B5C1] hover:bg-[#555C69]"
                         >
                             Отмена
                         </button>

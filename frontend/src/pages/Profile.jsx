@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Header from '../components/Header'
 import { useProfile } from '../context/ProfileContext'
@@ -6,14 +6,16 @@ import SportsmanProfile from '../components/profiles/SportsmanProfile'
 import SponsorProfile from '../components/profiles/SponsorProfile'
 import RegionProfile from '../components/profiles/RegionProfile'
 import { getToken, removeToken } from '../utils/auth'
+import Components from '../components'
 
 const Profile = () => {
 	const navigate = useNavigate()
-	const { profile, isLoading, error } = useProfile()
+	const { profile, isLoading, error, fetchProfile } = useProfile()
+	const { CustomButton } = Components
 
+	// Single redirect check on mount
 	useEffect(() => {
-		const token = getToken()
-		if (!token) {
+		if (!getToken()) {
 			navigate('/auth')
 		}
 	}, [navigate])
@@ -23,25 +25,42 @@ const Profile = () => {
 		navigate('/auth')
 	}
 
+	const handleRefresh = () => {
+		// This is the only place where we manually call fetchProfile
+		fetchProfile()
+	}
+
 	const renderProfileContent = () => {
-		if (isLoading) {
+		if (isLoading && !profile) {
 			return (
 				<div className="text-white text-center py-10">
+					<svg className="animate-spin h-10 w-10 text-[#FC3000] mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+						<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+						<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+					</svg>
 					<p>Загрузка профиля...</p>
 				</div>
 			)
 		}
 
-		if (error) {
+		if (error && !profile) {
 			return (
 				<div className="text-red-400 text-center py-10">
-					<p>Ошибка: {error}</p>
-					<button
-						onClick={() => navigate('/auth')}
-						className="mt-4 px-4 py-2 bg-[#FC3000] text-white rounded-lg"
-					>
-						Войти снова
-					</button>
+					<p className="text-xl mb-2">Ошибка загрузки профиля</p>
+					<p className="mb-6">{error}</p>
+					<div className="flex justify-center space-x-4">
+						<CustomButton
+							placeholder="Обновить"
+							handleClick={handleRefresh}
+							disabled={isLoading}
+						/>
+						<button
+							onClick={() => navigate('/auth')}
+							className="px-4 py-2 bg-[#444A58] text-white rounded-lg hover:bg-[#555C69]"
+						>
+							Войти снова
+						</button>
+					</div>
 				</div>
 			)
 		}
@@ -49,10 +68,11 @@ const Profile = () => {
 		if (!profile) {
 			return (
 				<div className="text-white text-center py-10">
-					<p>Профиль не найден</p>
+					<p className="text-xl mb-4">Профиль не найден</p>
+					<p className="mb-6">Возможно, вам необходимо авторизоваться</p>
 					<button
 						onClick={() => navigate('/auth')}
-						className="mt-4 px-4 py-2 bg-[#FC3000] text-white rounded-lg"
+						className="px-4 py-2 bg-[#FC3000] text-white rounded-lg hover:bg-[#E32D00]"
 					>
 						Войти
 					</button>
@@ -60,6 +80,7 @@ const Profile = () => {
 			)
 		}
 
+		// If we have a profile, show the appropriate component based on role
 		switch (profile.role) {
 			case 'sportsman':
 				return <SportsmanProfile />
@@ -113,7 +134,7 @@ const Profile = () => {
 							/>
 						</div>
 						<div className='flex flex-col p-6 border border-[#FC3000] bg-[#22222E]'>
-							{profile && !isLoading && (
+							{profile && (
 								<div className="flex justify-between items-center mb-6">
 									<div className="flex items-center">
 										<div className="w-16 h-16 rounded-full bg-gradient-to-r from-[#FC3000] to-[#D559FD] flex items-center justify-center text-2xl text-white mr-4">
@@ -129,12 +150,21 @@ const Profile = () => {
 											</p>
 										</div>
 									</div>
-									<button
-										onClick={handleLogout}
-										className="px-4 py-2 bg-[#444A58] text-[#B0B5C1] rounded-lg hover:bg-[#FC3000] hover:text-white transition-colors"
-									>
-										Выйти
-									</button>
+									<div className="flex space-x-3">
+										<button
+											onClick={handleRefresh}
+											className={`px-4 py-2 ${isLoading ? 'bg-[#333]' : 'bg-[#555C69] hover:bg-[#666D7A]'} text-white rounded-lg transition-colors`}
+											disabled={isLoading}
+										>
+											{isLoading ? 'Обновление...' : 'Обновить'}
+										</button>
+										<button
+											onClick={handleLogout}
+											className="px-4 py-2 bg-[#444A58] text-[#B0B5C1] rounded-lg hover:bg-[#FC3000] hover:text-white transition-colors"
+										>
+											Выйти
+										</button>
+									</div>
 								</div>
 							)}
 

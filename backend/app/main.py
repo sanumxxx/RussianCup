@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 from app.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, ratings, profiles
+from fastapi.staticfiles import StaticFiles
+from pathlib import Path
+import os
+from app.routers import auth, ratings, profiles, events
+
+# Импортируем все модели для создания таблиц
+from app.models.user import User
+from app.models.profile import SportsmanProfile, SponsorProfile, RegionProfile
+from app.models.event import Event, Tag, event_participants, event_tags
 
 # Создаём один раз!
 app = FastAPI(title="Федерация спортивного программирования - API")
@@ -19,9 +27,21 @@ app.add_middleware(
 app.include_router(auth.router, tags=["Аутентификация"])
 app.include_router(ratings.router, tags=["Рейтинг"])
 app.include_router(profiles.router, tags=["Профили"])
+app.include_router(events.router, tags=["События"])
+
+# Создаём директорию для загрузок, если ещё не создана
+uploads_dir = Path("uploads")
+uploads_dir.mkdir(exist_ok=True)
+events_uploads_dir = uploads_dir / "events"
+events_uploads_dir.mkdir(exist_ok=True)
+
+# Монтируем статические файлы
+app.mount("/api/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Создаём таблицы
+print("Создание таблиц в базе данных...")
 Base.metadata.create_all(bind=engine)
+print("Таблицы успешно созданы")
 
 
 @app.get("/")
