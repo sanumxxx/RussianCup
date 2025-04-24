@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from app.database import Base, engine
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth
+from app.routers import auth, ratings, profiles
 
 # Создаём один раз!
 app = FastAPI(title="Федерация спортивного программирования - API")
@@ -9,7 +9,7 @@ app = FastAPI(title="Федерация спортивного программ�
 # Добавляем CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Лучше указать точный адрес, например: ["http://localhost:5173"]
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -17,6 +17,8 @@ app.add_middleware(
 
 # Подключаем роутеры
 app.include_router(auth.router, tags=["Аутентификация"])
+app.include_router(ratings.router, tags=["Рейтинг"])
+app.include_router(profiles.router, tags=["Профили"])
 
 # Создаём таблицы
 Base.metadata.create_all(bind=engine)
